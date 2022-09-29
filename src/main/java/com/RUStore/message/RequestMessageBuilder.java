@@ -3,24 +3,22 @@ package com.RUStore.message;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import static com.RUStore.message.RequestType.*;
+import static com.RUStore.message.UtilTools.*;
 
 public class RequestMessageBuilder {
-	private static final Charset charSet = Charset.forName("US_ASCII");
 	public static byte[] putObjRequest(String key, byte[] payload) throws IOException {
 		try (
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
+			dOut.writeByte(PUT_OBJ_REQUEST);
 			byte[] keyByteArr = key.getBytes(charSet);
-			dOut.writeShort(PUT_OBJ_REQUEST);
-			dOut.writeShort(keyByteArr.length);
-			dOut.write(keyByteArr);
-			dOut.write(payload);
+			packer(dOut, keyByteArr);
+			packer(dOut, payload);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -30,11 +28,11 @@ public class RequestMessageBuilder {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
+			dOut.writeByte(PUT_FILE_REQUEST);
 			byte[] keyByteArr = key.getBytes(charSet);
-			dOut.writeShort(PUT_FILE_REQUEST);
-			dOut.writeShort(keyByteArr.length);
-			dOut.write(keyByteArr);
-			dOut.write(Files.readAllBytes(Paths.get(file_path)));
+			packer(dOut, keyByteArr);
+			byte[] payload = Files.readAllBytes(Paths.get(file_path));
+			packer(dOut, payload);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -44,9 +42,9 @@ public class RequestMessageBuilder {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
+			dOut.writeByte(GET_DATA_REQUEST);
 			byte[] keyByteArr = key.getBytes(charSet);
-			dOut.writeShort(GET_DATA_REQUEST);
-			dOut.write(keyByteArr); //the remaining amount of bytes is just the key, so no need to write the length of the key byte array
+			packer(dOut, keyByteArr);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -56,9 +54,9 @@ public class RequestMessageBuilder {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
+			dOut.writeByte(DEL_DATA_REQUEST);
 			byte[] keyByteArr = key.getBytes(charSet);
-			dOut.writeShort(DEL_DATA_REQUEST);
-			dOut.write(keyByteArr); //the remaining amount of bytes is just the key, so no need to write the length of the key byte array
+			packer(dOut, keyByteArr);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -68,7 +66,7 @@ public class RequestMessageBuilder {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
-			dOut.writeShort(GET_KEYS_REQUEST);
+			dOut.writeByte(GET_KEYS_REQUEST);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
