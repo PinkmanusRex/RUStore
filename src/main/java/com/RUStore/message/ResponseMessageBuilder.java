@@ -20,13 +20,22 @@ public class ResponseMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(GET_SUCCESS);
-			packer(dOut, data);
+			pack(dOut, data);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
 	}
-	public static byte[] getKeysSuccessResponse() {
-		return new byte[] {GET_SUCCESS};
+	public static byte[] getKeysSuccessResponse(String[] keys) throws IOException {
+		try (
+				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+				DataOutputStream dOut = new DataOutputStream(bOut);
+			) {
+			dOut.write(GET_SUCCESS);
+			dOut.writeInt(keys.length);
+			for (String key : keys) 
+				pack(dOut, key.getBytes(charSet));
+			return bOut.toByteArray();
+		}
 	}
 	public static byte[] keyNFResponse() {
 		return new byte[] {KEY_NF};

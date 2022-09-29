@@ -1,0 +1,14 @@
+The protocol is thusly
+byte[] pack
+first byte is defines the request or response type
+subsequently the remaining bytes are logically as follows
+[len, data], where len is an int (so read in 4 bytes) that describe how many bytes long the data is
+
+for messages that send key values, a byte[] will be sent that is structured
+[type][len, key][len, value]
+for messages that only send keys
+[type][len, key]
+for messages that only send the type
+[type]
+for the list of keys
+[type][number of entries][len, key][len, key]...[len, key]

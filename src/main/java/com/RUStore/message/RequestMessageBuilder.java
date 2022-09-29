@@ -16,9 +16,8 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(PUT_OBJ_REQUEST);
-			byte[] keyByteArr = key.getBytes(charSet);
-			packer(dOut, keyByteArr);
-			packer(dOut, payload);
+			pack(dOut, key.getBytes(charSet));
+			pack(dOut, payload);
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -29,10 +28,8 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(PUT_FILE_REQUEST);
-			byte[] keyByteArr = key.getBytes(charSet);
-			packer(dOut, keyByteArr);
-			byte[] payload = Files.readAllBytes(Paths.get(file_path));
-			packer(dOut, payload);
+			pack(dOut, key.getBytes(charSet));
+			pack(dOut, Files.readAllBytes(Paths.get(file_path)));
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -43,8 +40,7 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(GET_DATA_REQUEST);
-			byte[] keyByteArr = key.getBytes(charSet);
-			packer(dOut, keyByteArr);
+			pack(dOut, key.getBytes(charSet));
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -55,8 +51,7 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(DEL_DATA_REQUEST);
-			byte[] keyByteArr = key.getBytes(charSet);
-			packer(dOut, keyByteArr);
+			pack(dOut, key.getBytes(charSet));
 			dOut.flush();
 			return bOut.toByteArray();
 		}
