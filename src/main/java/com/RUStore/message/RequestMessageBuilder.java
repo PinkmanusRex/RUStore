@@ -61,14 +61,10 @@ public class RequestMessageBuilder {
 			return bOut.toByteArray();
 		}
 	}
-	public static byte[] getKeysRequest() throws IOException {
-		try (
-				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-				DataOutputStream dOut = new DataOutputStream(bOut);
-			) {
-			dOut.writeByte(GET_KEYS_REQUEST);
-			dOut.flush();
-			return bOut.toByteArray();
-		}
+	public static byte[] getKeysRequest() {
+		return new byte[] {GET_KEYS_REQUEST};
+	}
+	public static byte[] disconnectRequest() {
+		return new byte[] {DISCONNECT_REQUEST};
 	}
 }
