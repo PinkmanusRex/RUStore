@@ -23,12 +23,16 @@ public class RUStoreServer {
 	private static Map<String, byte[]> objStore = new HashMap<>();
 
 	/* any necessary helper methods here */
+
 	private static void sendAllKeys(DataOutputStream out) throws IOException {
 		String[] keys = (String[]) objStore.keySet().toArray();
 		sendPacket(out, getKeysSuccessResponse(keys));
 	}
 	private static void deleteEntry(DataOutputStream out, DataInputStream in) throws IOException {
-		String key = new String(readPacket(in, in.readInt()), charSet);
+		String key = new String(
+							readPacket(in, in.readInt()), 
+							ASCII_CHARSET
+						);
 		byte[] data = objStore.remove(key);
 		if (data == null)
 			sendPacket(out, keyNFResponse());
@@ -36,7 +40,10 @@ public class RUStoreServer {
 			sendPacket(out, delSuccessResponse());
 	}
 	private static void getDataFulfiller(DataOutputStream out, DataInputStream in) throws IOException {
-		String key = new String(readPacket(in, in.readInt()), charSet);
+		String key = new String(
+							readPacket(in, in.readInt()), 
+							ASCII_CHARSET
+						);
 		byte[] data = objStore.get(key);
 		if (data == null)
 			sendPacket(out, keyNFResponse());
@@ -44,7 +51,10 @@ public class RUStoreServer {
 			sendPacket(out, getDataSuccessResponse(data));
 	}
 	private static void putData(DataOutputStream out, DataInputStream in) throws IOException {
-		String key = new String(readPacket(in, in.readInt()), charSet);
+		String key = new String(
+							readPacket(in, in.readInt()), 
+							ASCII_CHARSET
+						);
 		byte[] data = readPacket(in, in.readInt());
 		if (objStore.containsKey(key)) {
 			sendPacket(out, putDupeResponse());
@@ -101,10 +111,7 @@ public class RUStoreServer {
 							case GET_DATA_REQUEST :
 								getDataFulfiller(out, in);
 								break;
-							case PUT_FILE_REQUEST :
-								putData(out, in);
-								break;
-							case PUT_OBJ_REQUEST :
+							case PUT_DATA_REQUEST :
 								putData(out, in);
 								break;
 						}

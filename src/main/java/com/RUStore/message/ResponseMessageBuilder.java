@@ -33,7 +33,8 @@ public class ResponseMessageBuilder {
 			dOut.write(GET_SUCCESS);
 			dOut.writeInt(keys.length);
 			for (String key : keys) 
-				pack(dOut, key.getBytes(charSet));
+				pack(dOut, key.getBytes(ASCII_CHARSET));
+			dOut.flush();
 			return bOut.toByteArray();
 		}
 	}

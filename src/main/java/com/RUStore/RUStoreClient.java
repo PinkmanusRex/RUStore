@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import static com.RUStore.message.RequestMessageBuilder.*;
 import static com.RUStore.message.ResponseType.*;
@@ -32,11 +33,12 @@ public class RUStoreClient {
 	 *
 	 * @param host	host url
 	 * @param port	port number
+	 * @throws NullPointerException if host or port is null
 	 */
 	public RUStoreClient(String host, int port) {
 		// Implement here
-		this.host = host;
-		this.port = port;
+		this.host = Objects.requireNonNull(host);
+		this.port = Objects.requireNonNull(port);
 	}
 
 	/**
@@ -51,16 +53,30 @@ public class RUStoreClient {
 
 		// Implement here
 		clientSocket = new Socket(host, port);
-		in = new DataInputStream(
+		try {
+			in = new DataInputStream(
 					new BufferedInputStream(
 							clientSocket.getInputStream()
-					)
-				);
-		out = new DataOutputStream(
+							)
+					);
+		} catch (IOException e) {
+			clientSocket.close();
+			clientSocket = null;
+			throw e;
+		}
+		try {
+			out = new DataOutputStream(
 					new BufferedOutputStream(
 							clientSocket.getOutputStream()
-					)
-				);
+							)
+					);
+		} catch (IOException e) {
+			clientSocket.close();
+			in.close();
+			clientSocket = null;
+			in = null;
+			throw e;
+		}
 
 	}
 
@@ -80,9 +96,7 @@ public class RUStoreClient {
 	public int put(String key, byte[] data) throws IOException {
 
 		// Implement here
-		byte[] packet = putObjRequest(key, data);
-		out.write(packet);
-		out.flush();
+		sendPacket(out, putDataRequest(key, data));
 		
 		byte status = in.readByte();
 
@@ -110,7 +124,7 @@ public class RUStoreClient {
 	public int put(String key, String file_path) throws IOException {
 
 		// Implement here
-		sendPacket(out, putFileRequest(key, file_path));
+		sendPacket(out, putDataRequest(key, file_path));
 		
 		byte status = in.readByte();
 
@@ -141,10 +155,9 @@ public class RUStoreClient {
 
 		if (status == KEY_NF)
 			return null;
-		else if (status == GET_SUCCESS) {
-			int len = in.readInt();
-			return readPacket(in, len);
-		} else
+		else if (status == GET_SUCCESS)
+			return readPacket(in, in.readInt());
+		else
 			throw new IOException(String.format("%d does not match KEY_NF or GET_SUCCESS response status codes", status));
 	}
 
@@ -170,9 +183,10 @@ public class RUStoreClient {
 		if (status == KEY_NF)
 			return 1;
 		else if (status == GET_SUCCESS) {
-			int len = in.readInt();
-			byte[] payload = readPacket(in, len);
-			Files.write(Paths.get(file_path), payload);
+			Files.write(
+					Paths.get(file_path), 
+					readPacket(in, in.readInt())
+				);
 			return 0;
 		} else
 			throw new IOException(String.format("%d does not match KEY_NF or GET_SUCCESS response status codes", status));
@@ -226,7 +240,10 @@ public class RUStoreClient {
 			int noEntries = in.readInt();
 			String[] keys = new String[noEntries];
 			for (int i = 0; i < noEntries; i += 1) 
-				keys[i] = new String(readPacket(in, in.readInt()), charSet);
+				keys[i] = new String(
+								readPacket(in, in.readInt()), 
+								ASCII_CHARSET
+							);
 			return keys;
 		} else
 			throw new IOException(String.format("%d does not match KEY_NF or GET_SUCCESS response status codes", status));
