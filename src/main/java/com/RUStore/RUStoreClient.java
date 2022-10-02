@@ -50,7 +50,7 @@ public class RUStoreClient {
 	 * @throws UnknownHostException 
 	 */
 	public void connect() throws UnknownHostException, IOException {
-
+		
 		// Implement here
 		clientSocket = new Socket(host, port);
 		try {
@@ -242,7 +242,7 @@ public class RUStoreClient {
 			for (int i = 0; i < noEntries; i += 1) 
 				keys[i] = new String(
 								readPacket(in, in.readInt()), 
-								ASCII_CHARSET
+								UTF_8_CHARSET
 							);
 			return keys;
 		} else

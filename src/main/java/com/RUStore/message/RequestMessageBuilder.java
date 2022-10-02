@@ -16,7 +16,7 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(PUT_DATA_REQUEST);
-			pack(dOut, key.getBytes(ASCII_CHARSET));
+			pack(dOut, key.getBytes(UTF_8_CHARSET));
 			pack(dOut, payload);
 			dOut.flush();
 			return bOut.toByteArray();
@@ -31,7 +31,7 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(GET_DATA_REQUEST);
-			pack(dOut, key.getBytes(ASCII_CHARSET));
+			pack(dOut, key.getBytes(UTF_8_CHARSET));
 			dOut.flush();
 			return bOut.toByteArray();
 		}
@@ -42,7 +42,7 @@ public class RequestMessageBuilder {
 				DataOutputStream dOut = new DataOutputStream(bOut);
 			) {
 			dOut.writeByte(DEL_DATA_REQUEST);
-			pack(dOut, key.getBytes(ASCII_CHARSET));
+			pack(dOut, key.getBytes(UTF_8_CHARSET));
 			dOut.flush();
 			return bOut.toByteArray();
 		}
