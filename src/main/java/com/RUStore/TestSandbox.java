@@ -1,7 +1,15 @@
 package com.RUStore;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.RUStore.message.UtilTools.*;
@@ -16,7 +24,7 @@ import static com.RUStore.message.UtilTools.*;
  */
 public class TestSandbox{
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 
 		// Create a new RUStoreClient
 		RUStoreClient client = new RUStoreClient("localhost", 12345);
@@ -30,10 +38,47 @@ public class TestSandbox{
 			e.printStackTrace();
 			System.out.println("Failed to connect to server.");
 		}
-		testStringPayload(client);
+		testRemove(client);
 		client.disconnect();
 	}
 	
+	//test removing a key-value entry
+	public static void testRemove(RUStoreClient client) throws IOException {
+		System.out.print("TEST_REMOVE : ");
+		client.put("removed", "Shouldn't exist".getBytes(UTF_8_CHARSET));
+		client.remove("removed");
+		System.out.println(client.get("removed"));
+	}
+	
+	//test duplicate key when doing PUT request
+	public static void testDupeKeyPut(RUStoreClient client) throws IOException {
+		System.out.print("TEST_DUPE_KEY_PUT : ");
+		client.put("dupe_key", "Correct entry".getBytes(UTF_8_CHARSET));
+		client.put("dupe_key", "Incorrect entry".getBytes(UTF_8_CHARSET));
+		System.out.println(new String(client.get("dupe_key"), UTF_8_CHARSET));
+	}
+	
+	//test PUT for 22MB file
+	public static void testBigFile(RUStoreClient client) throws IOException {
+		System.out.print("TEST_BIG_FILE : ");
+		String fileKey = "book";
+		String inputPath = "./inputfiles/book.pdf";
+		String outputPath = "./outputfiles/book.pdf";
+		client.put(fileKey, inputPath);
+		client.get(fileKey, outputPath);
+		File fileIn = new File(inputPath);
+		File fileOut = new File(outputPath);
+		byte[] fileInBytes = Files.readAllBytes(fileIn.toPath());
+		byte[] fileOutBytes = Files.readAllBytes(fileOut.toPath());
+		if (Arrays.equals(fileInBytes, fileOutBytes))
+			System.out.println("File contents equal");
+		else
+			System.out.println("File contents not equals");
+		Files.delete(fileOut.toPath());
+	}
+	
+	
+	//test sending a bunch of strings and getting those same strings back
 	public static void testStringPayload(RUStoreClient client) throws IOException {
 		System.out.print("TEST_STRING_PAYLOAD : ");
 		String[][] keyVals = new String[][] {
@@ -57,6 +102,7 @@ public class TestSandbox{
 		System.out.println(testRes);
 	}
 	
+	//test being able to retrieve all keys
 	public static void testGetAllKeys(RUStoreClient client) throws IOException {
 		System.out.print("TEST_GET_ALL_KEYS : ");
 		String[][] keyVals = new String[][] {
@@ -69,6 +115,39 @@ public class TestSandbox{
 			client.put(pair[0], pair[1].getBytes(UTF_8_CHARSET));
 		String keys = Arrays.stream(client.list()).collect(Collectors.joining(", "));
 		System.out.println(keys);
+	}
+	
+	//test sending a serializable and getting that serializable back
+	public static void testSerializablePayload(RUStoreClient client) throws IOException, ClassNotFoundException {
+		System.out.print("TEST_SERIALIZABLE_PAYLOAD : ");
+		HashMap<String, String> payload = new HashMap<String, String>(
+					Map.ofEntries(
+							Map.entry("Potato", "Mashed Potato"),
+							Map.entry("Apple", "MacBook Pro")
+						)
+				);
+		try (
+				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+				ObjectOutputStream oOut = new ObjectOutputStream(bOut);
+			) {
+			oOut.writeObject(payload);
+			oOut.flush();
+			byte[] bytePayload = bOut.toByteArray();
+			client.put("payload", bytePayload);
+			byte[] responseByteArr = client.get("payload");
+			try (
+					ByteArrayInputStream bIn = new ByteArrayInputStream(responseByteArr);
+					ObjectInputStream oIn = new ObjectInputStream(bIn);
+				) {
+				Object o = oIn.readObject();
+				HashMap<String, String> o2 = (HashMap<String, String>) o;
+				String st = o2.entrySet()
+								.stream()
+								.map(e -> String.format("{%s, %s}", e.getKey(), e.getValue()))
+								.collect(Collectors.joining(","));
+				System.out.println(st);
+			}
+		}
 	}
 
 }
