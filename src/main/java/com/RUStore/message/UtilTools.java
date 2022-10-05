@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class UtilTools {
-	//the ASCII CharSet that is used for String to byte[] conversions
+	//the UTF-8 CharSet that is used for String to byte[] conversions
 	public static final Charset UTF_8_CHARSET = StandardCharsets.UTF_8;
 	
 	/**

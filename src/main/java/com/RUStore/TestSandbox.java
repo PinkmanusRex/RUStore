@@ -39,6 +39,11 @@ public class TestSandbox{
 			System.out.println("Failed to connect to server.");
 		}
 		testRemove(client);
+		testBigFile(client);
+		testDupeKeyPut(client);
+		testGetAllKeys(client);
+		testSerializablePayload(client);
+		testStringPayload(client);
 		client.disconnect();
 	}
 	
